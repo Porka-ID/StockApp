@@ -1,16 +1,23 @@
+
+# =============+ Import +==============
 import tkinter
 import tkinter.messagebox
 from typing import Tuple
 from tkinter import ttk, END
 import customtkinter
-import sqlite3
+import pymongo
+import db as db
+
+# =============+ Style for all +==============
+
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")
 
+# =============+ View Table of Stock +==============
 class StockViewFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
-
+        self.connectDb = db.Database()
         # =============+ Style for Treeview +==============
         style = ttk.Style()
         style.theme_use("default")
@@ -45,6 +52,14 @@ class StockViewFrame(customtkinter.CTkFrame):
         self.table.heading('qty', text="Quantité")
         self.table.heading('infos', text="Informations")
         self.table.grid(row=0, column=0, sticky='nsew', padx=10, pady=10)
+        self.viewStock()
+
+    def viewStock(self):
+        self.values = self.connectDb.getAll()
+        i = 0
+        for doc in self.values:
+            i += 1
+            self.table.insert(parent='', index='end', iid=doc["_id"], text='', values=(i, doc["name"], doc["type"], doc["qty"], doc["infos"]))
 
 class StockApp(customtkinter.CTk):
     
