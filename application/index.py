@@ -12,10 +12,9 @@ import db as db
 
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")
-
-class insertStockWin(customtkinter.CTk):
-    def __init__(self) -> None:
-        super().__init__()
+class insertStockWin(customtkinter.CTkToplevel):
+    def __init__(self, parent) -> None:
+        super().__init__(parent)
 
 
         self.on_closing = None
@@ -23,9 +22,16 @@ class insertStockWin(customtkinter.CTk):
         self.geometry("550x250")
         self.resizable(False, False)
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.isOpen = False
 
+        self.label = customtkinter.CTkLabel(self, text="Test")
+        self.label.grid(row=0, column=0, padx=10, pady=10)
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
+
+    def on_closing(self):
+        self._window_exists = False
+        self.destroy()
 
 class buttonStock(customtkinter.CTkButton):
     def __init__(self, master, **kwargs):
@@ -34,29 +40,30 @@ class buttonStock(customtkinter.CTkButton):
 class BtnFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
+        
 
-        self.button1 = buttonStock(self, text="Ajouter un\nélement", command=self.button_event)
+        self.button1 = buttonStock(self, text="Ajouter un\nélement", command=self.insertFrameView)
         self.button1.grid(row=0, column=0, padx=10, pady=10)
 
-        self.button2 = buttonStock(self, text="Retirer du\nstock à un\nélement", command=self.button_event)
+        self.button2 = buttonStock(self, text="Retirer du\nstock à un\nélement", command=self.insertFrameView)
         self.button2.grid(row=1, column=0, padx=10, pady=10)
 
-        self.button3 = buttonStock(self, text="Retirer un\nélement", command=self.button_event)
+        self.button3 = buttonStock(self, text="Retirer un\nélement", command=self.insertFrameView)
         self.button3.grid(row=2, column=0, padx=10, pady=10)
 
-        self.button4 = buttonStock(self, text="Supprimer \ntous les\nélements", command=self.button_event)
+        self.button4 = buttonStock(self, text="Supprimer \ntous les\nélements", command=self.insertFrameView)
         self.button4.grid(row=3, column=0, padx=10, pady=10)
 
-        self.button5 = buttonStock(self, text="Ajouter du\nstock à un\nélementt", command=self.button_event)
+        self.button5 = buttonStock(self, text="Ajouter du\nstock à un\nélementt", command=self.insertFrameView)
         self.button5.grid(row=0, column=1, padx=10, pady=10)
 
-        self.button6 = buttonStock(self, text="Retirer du\nstock à un\nélement", command=self.button_event)
+        self.button6 = buttonStock(self, text="Retirer du\nstock à un\nélement", command=self.insertFrameView)
         self.button6.grid(row=1, column=1, padx=10, pady=10)
         
 
-    def button_event(self):
-        self.newWin = insertStockWin()
-        self.newWin.mainloop()
+    def insertFrameView(self):
+        self.newWin = insertStockWin(self)
+        self.newWin.grab_set()
 
 
 # =============+ View Table of Stock +==============
@@ -131,10 +138,10 @@ class StockApp(customtkinter.CTk):
         self.frameLeft = BtnFrame(master=self, corner_radius=15, height=540, width=260)
         self.frameLeft.grid(row=0, column=1, padx=20, pady=20, sticky='nsew')
 
+        self.mainloop()
     
         
 
 
 if __name__ == "__main__":
     app = StockApp()
-    app.mainloop()
