@@ -23,11 +23,13 @@ class insertStockWin(customtkinter.CTkToplevel):
         self.resizable(False, False)
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.isOpen = False
-
-        self.label = customtkinter.CTkLabel(self, text="Test")
-        self.label.grid(row=0, column=0, padx=10, pady=10)
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
+        
+
+        
+        self.label = customtkinter.CTkEntry(self, placeholder_text="Nom de l'élement")
+        self.label.grid(row=0, column=0, padx=10, pady=10)
 
     def on_closing(self):
         self._window_exists = False
