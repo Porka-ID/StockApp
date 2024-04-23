@@ -12,28 +12,68 @@ import db as db
 
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")
-class insertStockWin(customtkinter.CTkToplevel):
-    def __init__(self, parent) -> None:
+class popupWin(customtkinter.CTkToplevel):
+    def __init__(self, parent, title, geometry="550x250") -> None:
         super().__init__(parent)
 
 
         self.on_closing = None
-        self.title("Inserer un nouvel élement")
-        self.geometry("550x250")
+        self.title(title)
+        self.geometry(geometry)
         self.resizable(False, False)
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.isOpen = False
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
         
-
-        
-        self.label = customtkinter.CTkEntry(self, placeholder_text="Nom de l'élement")
-        self.label.grid(row=0, column=0, padx=10, pady=10)
-
     def on_closing(self):
         self._window_exists = False
         self.destroy()
+
+class insertStockWin(popupWin):
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent, "Inserer un élement", geometry='500x350', **kwargs)
+
+        # Nom de l'élement widget
+        self.labelName = customtkinter.CTkLabel(self, text="Nom de l'élement", anchor="w", justify="left")
+        self.labelName.grid(row=0, column=0, sticky="w", padx=30, pady=(20, 0), ipadx=10)
+        self.inputName = customtkinter.CTkEntry(self, placeholder_text="Nom")
+        self.inputName.grid(row=1, column=0, sticky="w", padx=28, ipadx=10)
+
+        #Type de l'élement widget
+        self.labelType = customtkinter.CTkLabel(self, text="Type de l'élement", anchor="w", justify="left")
+        self.labelType.grid(row=0, column=1, sticky="w", padx=(30, 0), pady=(20, 0), ipadx=10)
+        self.inputType = customtkinter.CTkComboBox(self, values=["Nourriture", "Boisson"])
+        self.inputType.grid(row=1, column=1, sticky="w", padx=28, ipadx=10)
+
+        #Stock déja présent de l'élement widget
+        self.labelStock = customtkinter.CTkLabel(self, text="Stock de l'élement", anchor="w", justify="left")
+        self.labelStock.grid(row=3, column=0, sticky="w", padx=30, pady=(20, 0), ipadx=10)
+        self.inputStock = customtkinter.CTkEntry(self, placeholder_text="number")
+        self.inputStock.grid(row=4, column=0, sticky="w", padx=28, ipadx=10)
+        
+        #Information de l'élement
+        self.labelInfos = customtkinter.CTkLabel(self, text="Information(s) du produit", anchor='w', justify='left')
+        self.labelInfos.grid(row=3, column=1, sticky="w", padx=30, pady=(20, 0), ipadx=10)
+        self.inputInfoKey = customtkinter.CTkEntry(self, placeholder_text="Clé de l'info")
+        self.inputInfoKey.grid(row=4, column=1, sticky='w', padx=28, ipadx=10)
+        self.inputInfoGet = customtkinter.CTkEntry(self, placeholder_text="Info")
+        self.inputInfoGet.grid(row=5, column=1, sticky='w', padx=28, pady=(5, 0), ipadx=10)
+
+        #Ajouter une info
+        self.btnAdd = customtkinter.CTkButton(self, width=50, height=20, text='Ajouter', fg_color="#373737", hover_color='#414141')
+        self.btnAdd.grid(row=5, column=1, sticky='e', padx=(0, 15), pady=(5, 0))
+
+        #Listing des infos ajoutées
+        columns = ('key', 'info')
+        self.table = ttk.Treeview(master=self, columns=columns, height=5, selectmode='browse', show='headings')
+        self.table.column("#1", anchor='c', width=25, minwidth=25)
+        self.table.column('#2', anchor='w', minwidth=25)
+        # =============+ Table head +==============
+        self.table.heading('key', text='Clé')
+        self.table.heading('info', text="Info")
+        self.table.grid(row=6, column=1, sticky='nsew', padx=20, pady=10)
+
+
+
 
 class buttonStock(customtkinter.CTkButton):
     def __init__(self, master, **kwargs):
