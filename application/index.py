@@ -89,6 +89,8 @@ class insertStockWin(popupWin):
         except:
             self.infos[key] = info
             self.table.insert(parent='', index='end', text='', values=(key, info))
+            self.inputInfoGet.delete(0, END)
+            self.inputInfoKey.delete(0, END)
             
     def addToStock(self):
         name = self.inputName.get()
@@ -126,7 +128,7 @@ class BtnFrame(customtkinter.CTkFrame):
         self.button1 = buttonStock(self, text="Ajouter un\nélement", command=self.insertFrameView)
         self.button1.grid(row=0, column=0, padx=10, pady=10)
 
-        self.button2 = buttonStock(self, text="Retirer du\nstock à un\nélement", command=self.insertFrameView)
+        self.button2 = buttonStock(self, text="Modifier du\nstock à un\nélement", command=self.insertFrameView)
         self.button2.grid(row=1, column=0, padx=10, pady=10)
 
         # Delete element (Already fix)
@@ -137,11 +139,9 @@ class BtnFrame(customtkinter.CTkFrame):
         self.button4 = buttonStock(self, text="Supprimer \ntous les\nélements", command=self.deleteAllFrameView)
         self.button4.grid(row=3, column=0, padx=10, pady=10)
         
-        self.button5 = buttonStock(self, text="Ajouter du\nstock à un\nélementt", command=self.insertFrameView)
-        self.button5.grid(row=0, column=1, padx=10, pady=10)
 
         self.button6 = buttonStock(self, text="Modifier un\nélement", command=self.insertFrameView)
-        self.button6.grid(row=1, column=1, padx=10, pady=10)
+        self.button6.grid(row=0, column=1, padx=10, pady=10)
         
 
     def insertFrameView(self):
