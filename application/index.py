@@ -100,7 +100,9 @@ class insertStockWin(popupWin):
         
         if len(name) > 1 and nbrStock:
             print(name, type, nbrStock, self.infos)
-            print(self.parent.master.frameLeft.connectDb.insertStock(name, type, nbrStock, self.infos))
+            self.principal = self.parent.master.frameLeft
+            self.principal.connectDb.insertStock(name, type, nbrStock, self.infos)
+            self.principal.refreshStock()
         else:
             print("Il manque des infos")
 
@@ -186,6 +188,8 @@ class StockViewFrame(customtkinter.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
 
     def refreshStock(self):
+        for i in self.table.get_children():
+            self.table.delete(i)
         self.values = self.connectDb.getAll()
         i = 0
         for doc in self.values:
