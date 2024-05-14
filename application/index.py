@@ -16,7 +16,6 @@ class popupWin(customtkinter.CTkToplevel):
     def __init__(self, parent, title, geometry="550x250") -> None:
         super().__init__(parent)
 
-
         self.on_closing = None
         self.title(title)
         self.geometry(geometry)
@@ -64,7 +63,7 @@ class insertStockWin(popupWin):
         self.inputInfoGet.grid(row=5, column=1, sticky='w', padx=28, pady=(5, 0), ipadx=10)
 
         #Ajouter une info
-        self.btnAdd = customtkinter.CTkButton(self, width=50, height=20, text='Ajouter', fg_color="#373737", hover_color='#414141', command=self.addToStock) #command=lambda: self.addInfo(self.strInfoKey.get(), self.strInfoGet.get()) )
+        self.btnAdd = customtkinter.CTkButton(self, width=50, height=20, text='Ajouter', fg_color="#373737", hover_color='#414141', command=lambda: self.addInfo(self.inputInfoKey.get(), self.inputInfoGet.get())) #command=lambda: self.addInfo(self.strInfoKey.get(), self.strInfoGet.get()) )
         self.btnAdd.grid(row=5, column=1, sticky='e', padx=(0, 15), pady=(5, 0))
 
         #Listing des infos ajoutées
@@ -76,6 +75,9 @@ class insertStockWin(popupWin):
         self.table.heading('key', text='Clé')
         self.table.heading('info', text="Info")
         self.table.grid(row=6, column=1, sticky='nsew', padx=20, pady=10)
+        
+        self.btnAddElem = customtkinter.CTkButton(self, text="Valider", fg_color="#373737", hover_color="#414141", command=self.addToStock)
+        self.btnAddElem.grid(row=6, column=0 ,sticky="nsew", padx=20, pady=20)
         
     def addInfo(self, key, info):
         if not key or not info:
@@ -103,6 +105,7 @@ class insertStockWin(popupWin):
             self.principal = self.parent.master.frameLeft
             self.principal.connectDb.insertStock(name, type, nbrStock, self.infos)
             self.principal.refreshStock()
+            self.destroy()
         else:
             print("Il manque des infos")
 
@@ -117,30 +120,41 @@ class BtnFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
         self.master = master
+        self.frameLeft = self.master.frameLeft
 
+        # Add element (Already fix)
         self.button1 = buttonStock(self, text="Ajouter un\nélement", command=self.insertFrameView)
         self.button1.grid(row=0, column=0, padx=10, pady=10)
 
         self.button2 = buttonStock(self, text="Retirer du\nstock à un\nélement", command=self.insertFrameView)
         self.button2.grid(row=1, column=0, padx=10, pady=10)
 
-        self.button3 = buttonStock(self, text="Retirer un\nélement", command=self.insertFrameView)
+        # Delete element (Already fix)
+        self.button3 = buttonStock(self, text="Retirer un\nélement", command=self.deleteFrameView)
         self.button3.grid(row=2, column=0, padx=10, pady=10)
 
-        self.button4 = buttonStock(self, text="Supprimer \ntous les\nélements", command=self.insertFrameView)
+        # Delete all elements (on fixing)
+        self.button4 = buttonStock(self, text="Supprimer \ntous les\nélements", command=self.deleteAllFrameView)
         self.button4.grid(row=3, column=0, padx=10, pady=10)
-
+        
         self.button5 = buttonStock(self, text="Ajouter du\nstock à un\nélementt", command=self.insertFrameView)
         self.button5.grid(row=0, column=1, padx=10, pady=10)
 
-        self.button6 = buttonStock(self, text="Retirer du\nstock à un\nélement", command=self.insertFrameView)
+        self.button6 = buttonStock(self, text="Modifier un\nélement", command=self.insertFrameView)
         self.button6.grid(row=1, column=1, padx=10, pady=10)
         
 
     def insertFrameView(self):
         self.newWin = insertStockWin(self)
         self.newWin.grab_set()
+        
+    def deleteFrameView(self):
+        self.frameLeft.connectDb.deleteStock(self.frameLeft.curItemID)
+        self.frameLeft.refreshStock()
 
+    def deleteAllFrameView(self):
+        self.frameLeft.connectDb.deleteAllStock()
+        self.frameLeft.refreshStock()
 
 # =============+ View Table of Stock +==============
 class StockViewFrame(customtkinter.CTkFrame):
@@ -183,6 +197,7 @@ class StockViewFrame(customtkinter.CTkFrame):
         self.table.heading('infos', text="Informations")
         self.table.grid(row=0, column=0, sticky='nsew', padx=10, pady=10)
         self.refreshStock()
+        self.table.bind('<ButtonRelease-1>', self.selectedItem)
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
@@ -193,9 +208,15 @@ class StockViewFrame(customtkinter.CTkFrame):
         self.values = self.connectDb.getAll()
         i = 0
         for doc in self.values:
+            print(doc)
             i += 1
             self.table.insert(parent='', index='end', iid=doc["_id"], text='', values=(i, doc["name"], doc["type"], doc["qty"], doc["infos"]))
-
+    
+    def selectedItem(self, a):
+        self.curItemID = self.table.focus()
+        self.curItem = self.table.item(self.curItemID)
+        
+        
 class StockApp(customtkinter.CTk):
     
     def __init__(self) -> None:
