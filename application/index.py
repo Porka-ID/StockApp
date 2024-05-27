@@ -5,12 +5,13 @@ import tkinter.messagebox
 from typing import Tuple
 from tkinter import ttk, END
 import customtkinter
+from CTkSpinbox import *
 import pymongo
 import db as db
 
 # =============+ Style for all +==============
 
-customtkinter.set_appearance_mode("System")
+customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("blue")
 class popupWin(customtkinter.CTkToplevel):
     def __init__(self, parent, title, geometry="550x250") -> None:
@@ -26,6 +27,25 @@ class popupWin(customtkinter.CTkToplevel):
     def on_closing(self):
         self._window_exists = False
         self.destroy()
+
+class modifyStockWin(popupWin):
+    def __init__(self, curItem, parent, title="Modifier un nombre de stock", geometry="550x250") -> None:
+        super().__init__(parent, title, geometry)
+        self.labelLastStockNameT = customtkinter.CTkLabel(self, text="Nom de l'élément", anchor="center", justify="left")
+        self.labelLastStockNameT.grid(row=0, column=0, sticky="nsew")
+        self.labelLastStockName = customtkinter.CTkLabel(self, text=curItem['values'][1], anchor="center", text_color="green", justify="left", corner_radius=8)
+        self.labelLastStockName.grid(row=1, column=0, sticky="nsew")
+        self.labelLastStockNbrT = customtkinter.CTkLabel(self, text="Nombre de stock de l'élément", anchor="center", justify="left")
+        self.labelLastStockNbrT.grid(row=2, column=0, sticky="nsew")
+        self.labelLastStockNbr = customtkinter.CTkLabel(self, text=curItem['values'][3], anchor="center", text_color="green", justify="left", corner_radius=8)
+        self.labelLastStockNbr.grid(row=3, column=0, sticky="nsew")
+        self.labelReqNbrT = customtkinter.CTkLabel(self, text="Nouveau nombre de stock de l'élément", anchor="center", justify="left")
+        self.labelReqNbrT.grid(row=4, column=0, sticky="nsew")
+        self.inputNbr = CTkSpinbox(self, start_value=curItem['values'][3], min_value=0)
+        self.inputNbr.grid(row=5, column=0, sticky="nsew", padx=50)
+        self.btnAddElem = customtkinter.CTkButton(self, text="Valider", fg_color="#373737", hover_color="#414141", command=print)
+        self.btnAddElem.grid(row=6, column=0 ,sticky="nsew", padx=50, pady=15)
+        self.grid_columnconfigure(0, weight=1)
 
 class insertStockWin(popupWin):
     def __init__(self, parent, **kwargs):
@@ -128,7 +148,7 @@ class BtnFrame(customtkinter.CTkFrame):
         self.button1 = buttonStock(self, text="Ajouter un\nélement", command=self.insertFrameView)
         self.button1.grid(row=0, column=0, padx=10, pady=10)
 
-        self.button2 = buttonStock(self, text="Modifier du\nstock à un\nélement", command=self.insertFrameView)
+        self.button2 = buttonStock(self, text="Modifier du\nstock à un\nélement", command=self.modifyStockFrameView)
         self.button2.grid(row=1, column=0, padx=10, pady=10)
 
         # Delete element (Already fix)
@@ -155,6 +175,9 @@ class BtnFrame(customtkinter.CTkFrame):
     def deleteAllFrameView(self):
         self.frameLeft.connectDb.deleteAllStock()
         self.frameLeft.refreshStock()
+
+    def modifyStockFrameView(self):
+        self.newWin = modifyStockWin(self.frameLeft.curItem, self)
 
 # =============+ View Table of Stock +==============
 class StockViewFrame(customtkinter.CTkFrame):
