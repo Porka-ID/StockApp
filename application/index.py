@@ -7,6 +7,7 @@ from tkinter import ttk, END
 import customtkinter
 import pymongo
 import db as db
+from spinbox import *
 
 # =============+ Style for all +==============
 
@@ -26,6 +27,29 @@ class popupWin(customtkinter.CTkToplevel):
     def on_closing(self):
         self._window_exists = False
         self.destroy()
+
+class modifyStockNbrWin(popupWin):
+    def __init__(self, parent, item, **kwargs):
+        super().__init__(parent, "Modifier le nombre du stock", geometry="300x180", **kwargs)
+        print(item)
+        self.labelItemName = customtkinter.CTkLabel(self, text="Element selectioné : " + item["values"][1])
+        self.labelItemName.grid(row=1, column=1)
+        self.labelItemStock = customtkinter.CTkLabel(self, text="Stock actuel selectioné : " + str(item["values"][3]))
+        self.labelItemStock.grid(row=2, column=1)
+        self.labelItemNewStock = customtkinter.CTkLabel(self, text="Nouveau stock : ")
+        self.labelItemNewStock.grid(row=3, column=1)
+
+        self.inputNewStock = CTkSpinbox(self, start_value=item["values"][3], min_value=1, max_value=999999999, button_color="#487a46", width=150)
+        self.inputNewStock.grid(row=4, column=1)
+
+        self.btnValidate = customtkinter.CTkButton(self, text='Valider', fg_color="#373737", hover_color='#414141', command=lambda: print("hello")) #command=lambda: self.addInfo(self.strInfoKey.get(), self.strInfoGet.get()) )
+        self.btnValidate.grid(row=5, column=1, pady=5)
+
+        self.grid_columnconfigure(1, weight=1)
+
+
+
+
 
 class insertStockWin(popupWin):
     def __init__(self, parent, **kwargs):
@@ -128,7 +152,7 @@ class BtnFrame(customtkinter.CTkFrame):
         self.button1 = buttonStock(self, text="Ajouter un\nélement", command=self.insertFrameView)
         self.button1.grid(row=0, column=0, padx=10, pady=10)
 
-        self.button2 = buttonStock(self, text="Modifier du\nstock à un\nélement", command=self.insertFrameView)
+        self.button2 = buttonStock(self, text="Modifier du\nstock à un\nélement", command=self.modifyStockView)
         self.button2.grid(row=1, column=0, padx=10, pady=10)
 
         # Delete element (Already fix)
@@ -155,6 +179,13 @@ class BtnFrame(customtkinter.CTkFrame):
     def deleteAllFrameView(self):
         self.frameLeft.connectDb.deleteAllStock()
         self.frameLeft.refreshStock()
+
+    def modifyStockView(self):
+        if self.frameLeft.curItem:
+            self.newWin = modifyStockNbrWin(self, self.frameLeft.curItem)
+            self.newWin.grab_set()
+        else:
+            print("Selectionner un element plsw")
 
 # =============+ View Table of Stock +==============
 class StockViewFrame(customtkinter.CTkFrame):
