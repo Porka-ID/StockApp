@@ -21,3 +21,7 @@ class Database:
     def deleteAllStock(self):
         self.col.delete_many({})
         return {}
+    
+    def modifyNbrStock(self, name, nbr):
+        self.col.update_one({"name": name}, {"$set": {"qty": nbr}})
+        return {"qty": nbr}

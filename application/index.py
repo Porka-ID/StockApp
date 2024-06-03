@@ -5,7 +5,7 @@ import tkinter.messagebox
 from typing import Tuple
 from tkinter import ttk, END
 import customtkinter
-from CTkSpinbox import *
+from Spinbox import *
 import pymongo
 import db as db
 
@@ -31,6 +31,8 @@ class popupWin(customtkinter.CTkToplevel):
 class modifyStockWin(popupWin):
     def __init__(self, curItem, parent, title="Modifier un nombre de stock", geometry="550x250") -> None:
         super().__init__(parent, title, geometry)
+        self.curItem = curItem
+        self.parent = parent
         self.labelLastStockNameT = customtkinter.CTkLabel(self, text="Nom de l'élément", anchor="center", justify="left")
         self.labelLastStockNameT.grid(row=0, column=0, sticky="nsew")
         self.labelLastStockName = customtkinter.CTkLabel(self, text=curItem['values'][1], anchor="center", text_color="green", justify="left", corner_radius=8)
@@ -41,11 +43,19 @@ class modifyStockWin(popupWin):
         self.labelLastStockNbr.grid(row=3, column=0, sticky="nsew")
         self.labelReqNbrT = customtkinter.CTkLabel(self, text="Nouveau nombre de stock de l'élément", anchor="center", justify="left")
         self.labelReqNbrT.grid(row=4, column=0, sticky="nsew")
-        self.inputNbr = CTkSpinbox(self, start_value=curItem['values'][3], min_value=0)
+        self.inputNbr = Spinbox(self, start_value=curItem['values'][3], min_value=0, max_value=99999999)
         self.inputNbr.grid(row=5, column=0, sticky="nsew", padx=50)
-        self.btnAddElem = customtkinter.CTkButton(self, text="Valider", fg_color="#373737", hover_color="#414141", command=print)
+        self.btnAddElem = customtkinter.CTkButton(self, text="Valider", fg_color="#373737", hover_color="#414141", command=self.addNewStock)
         self.btnAddElem.grid(row=6, column=0 ,sticky="nsew", padx=50, pady=15)
         self.grid_columnconfigure(0, weight=1)
+
+    def addNewStock(self):
+        self.principal = self.parent.master.frameLeft
+        self.principal.connectDb.modifyNbrStock(self.curItem['values'][1], int(self.inputNbr.get()))
+        self.principal.refreshStock()
+        self.destroy()
+    
+        
 
 class insertStockWin(popupWin):
     def __init__(self, parent, **kwargs):
@@ -178,6 +188,7 @@ class BtnFrame(customtkinter.CTkFrame):
 
     def modifyStockFrameView(self):
         self.newWin = modifyStockWin(self.frameLeft.curItem, self)
+        self.newWin.grab_set()
 
 # =============+ View Table of Stock +==============
 class StockViewFrame(customtkinter.CTkFrame):
