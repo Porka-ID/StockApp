@@ -8,6 +8,7 @@ import customtkinter
 from Spinbox import *
 import pymongo
 import db as db
+from PIL import Image
 
 # =============+ Style for all +==============
 
@@ -32,6 +33,7 @@ class modifyStockWin(popupWin):
     def __init__(self, curItem, parent, title="Modifier un nombre de stock", geometry="550x250") -> None:
         super().__init__(parent, title, geometry)
         self.curItem = curItem
+        self.parent.master.unShow()
         self.parent = parent
         self.labelLastStockNameT = customtkinter.CTkLabel(self, text="Nom de l'élément", anchor="center", justify="left")
         self.labelLastStockNameT.grid(row=0, column=0, sticky="nsew")
@@ -48,6 +50,7 @@ class modifyStockWin(popupWin):
         self.btnAddElem = customtkinter.CTkButton(self, text="Valider", fg_color="#373737", hover_color="#414141", command=self.addNewStock)
         self.btnAddElem.grid(row=6, column=0 ,sticky="nsew", padx=50, pady=15)
         self.grid_columnconfigure(0, weight=1)
+
 
     def addNewStock(self):
         self.principal = self.parent.master.frameLeft
@@ -187,8 +190,11 @@ class BtnFrame(customtkinter.CTkFrame):
         self.frameLeft.refreshStock()
 
     def modifyStockFrameView(self):
-        self.newWin = modifyStockWin(self.frameLeft.curItem, self)
-        self.newWin.grab_set()
+        try:
+            self.newWin = modifyStockWin(self.frameLeft.curItem, self)
+            self.newWin.grab_set()
+        except AttributeError:
+            self.master.Show(error="Pas d'item selectionné")
 
 # =============+ View Table of Stock +==============
 class StockViewFrame(customtkinter.CTkFrame):
@@ -249,7 +255,19 @@ class StockViewFrame(customtkinter.CTkFrame):
     def selectedItem(self, a):
         self.curItemID = self.table.focus()
         self.curItem = self.table.item(self.curItemID)
-        
+
+
+class errorPopup(customtkinter.CTkFrame):
+    def __init__(self, master, error, **kwargs):
+        super().__init__(master, bg_color='red', fg_color='red', **kwargs)
+        self.errorImg = customtkinter.CTkImage(Image.open("application/src/error.png"), size=(15, 15))
+        self.errorLblImg = customtkinter.CTkLabel(self, image=self.errorImg, text="")
+        self.errorLblImg.grid(row=0, column=0, padx=(10, 0))
+
+        self.errorLbl = customtkinter.CTkLabel(self, text=error, justify="left")
+        self.errorLbl.grid(row=0, column=1, padx=(10, 0))
+    
+    
         
 class StockApp(customtkinter.CTk):
     
@@ -270,8 +288,19 @@ class StockApp(customtkinter.CTk):
         self.frameLeft.grid(row=0, column=0, padx=20, pady=20, sticky='nsew')
         self.frameRight = BtnFrame(master=self, corner_radius=15, height=540, width=260)
         self.frameRight.grid(row=0, column=1, padx=20, pady=20, sticky='nsew')
-
         self.mainloop()
+
+    
+    def unShow(self):
+        try:
+            self.errorLine.grid_forget()
+        except:
+            print("a")
+
+    def Show(self, error):
+        self.errorLine = errorPopup(master=self, corner_radius=4, height=20, width=930, error=error)
+        self.errorLine.grid(row=1, column=0, columnspan=2, sticky='ew')
+        
     
         
 
