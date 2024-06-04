@@ -11,6 +11,7 @@ class Database:
         return self.col.find() or False
     
     def insertStock(self, name, type, nbrStock, infos):
+        print(infos)
         self.col.insert_one({"name": name, "type": type, "qty": nbrStock, "infos": infos})
         return name, type, nbrStock, infos
     

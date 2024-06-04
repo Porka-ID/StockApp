@@ -9,6 +9,7 @@ from Spinbox import *
 import pymongo
 import db as db
 from PIL import Image
+import traceback
 
 # =============+ Style for all +==============
 
@@ -32,6 +33,7 @@ class popupWin(customtkinter.CTkToplevel):
 class modifyStockWin(popupWin):
     def __init__(self, curItem, parent, title="Modifier un nombre de stock", geometry="550x250") -> None:
         super().__init__(parent, title, geometry)
+        self.parent = parent
         self.curItem = curItem
         self.parent.master.unShow()
         self.parent = parent
@@ -57,12 +59,12 @@ class modifyStockWin(popupWin):
         self.principal.connectDb.modifyNbrStock(self.curItem['values'][1], int(self.inputNbr.get()))
         self.principal.refreshStock()
         self.destroy()
-    
+
         
 
 class insertStockWin(popupWin):
-    def __init__(self, parent, **kwargs):
-        super().__init__(parent, "Inserer un élement", geometry='500x350', **kwargs)
+    def __init__(self, parent, title="Inserer un élement", **kwargs):
+        super().__init__(parent, title, geometry='500x390', **kwargs)
         self.infos = {}
         self.parent = parent
 
@@ -70,19 +72,21 @@ class insertStockWin(popupWin):
         self.strName = customtkinter.StringVar()
         self.labelName = customtkinter.CTkLabel(self, text="Nom de l'élement", anchor="w", justify="left")
         self.labelName.grid(row=0, column=0, sticky="w", padx=30, pady=(20, 0), ipadx=10)
-        self.inputName = customtkinter.CTkEntry(self, placeholder_text="Nom")
+        self.inputName = customtkinter.CTkEntry(self, textvariable=self.strName)
         self.inputName.grid(row=1, column=0, sticky="w", padx=28, ipadx=10)
 
         #Type de l'élement widget
+        self.strType = customtkinter.StringVar(value="Nourriture")
         self.labelType = customtkinter.CTkLabel(self, text="Type de l'élement", anchor="w", justify="left")
         self.labelType.grid(row=0, column=1, sticky="w", padx=(30, 0), pady=(20, 0), ipadx=10)
-        self.inputType = customtkinter.CTkComboBox(self, values=["Nourriture", "Boisson"])
+        self.inputType = customtkinter.CTkComboBox(self, values=["Nourriture", "Boisson"], variable=self.strType)
         self.inputType.grid(row=1, column=1, sticky="w", padx=28, ipadx=10)
 
         #Stock déja présent de l'élement widget
+        self.strStock = customtkinter.StringVar()
         self.labelStock = customtkinter.CTkLabel(self, text="Stock de l'élement", anchor="w", justify="left")
         self.labelStock.grid(row=3, column=0, sticky="w", padx=30, pady=(20, 0), ipadx=10)
-        self.inputStock = customtkinter.CTkEntry(self, placeholder_text="number")
+        self.inputStock = customtkinter.CTkEntry(self, textvariable=self.strStock)
         self.inputStock.grid(row=4, column=0, sticky="w", padx=28, ipadx=10)
         
         #Information de l'élement
@@ -142,9 +146,26 @@ class insertStockWin(popupWin):
             self.principal.refreshStock()
             self.destroy()
         else:
-            print("Il manque des infos")
+            self.Show(error="Il manque des infos")
+
+    def Show(self, error):
+        self.errorLine = errorPopup(master=self, corner_radius=4, height=20, error=error)
+        self.errorLine.grid(row=7, column=0, columnspan=4, sticky='ew')
 
 
+class modifyItemWin(insertStockWin):
+    def __init__(self, parent, curItem, **kwargs):
+        super().__init__(parent, title="Modifier un élement", **kwargs)
+        self.curItem = curItem
+        self.strName.set(curItem["values"][1])
+        self.strType.set(curItem["values"][2])
+        self.strStock.set(curItem["values"][3])
+        self.addAllInfo()
+    
+    def addAllInfo(self):
+        for doc in self.curItem["values"]:
+            print(type(doc))
+            print(doc)
 
 
 class buttonStock(customtkinter.CTkButton):
@@ -173,7 +194,7 @@ class BtnFrame(customtkinter.CTkFrame):
         self.button4.grid(row=3, column=0, padx=10, pady=10)
         
 
-        self.button6 = buttonStock(self, text="Modifier un\nélement", command=self.insertFrameView)
+        self.button6 = buttonStock(self, text="Modifier un\nélement", command=self.modifyItemFrameView)
         self.button6.grid(row=0, column=1, padx=10, pady=10)
         
 
@@ -182,18 +203,30 @@ class BtnFrame(customtkinter.CTkFrame):
         self.newWin.grab_set()
         
     def deleteFrameView(self):
-        self.frameLeft.connectDb.deleteStock(self.frameLeft.curItemID)
-        self.frameLeft.refreshStock()
-
+        try:
+            self.frameLeft.connectDb.deleteStock(self.frameLeft.curItemID)
+            self.frameLeft.refreshStock()
+        except AttributeError:
+            self.master.Show(error="Pas d'item selectionné")
+        else:
+            self.master.unShow()
     def deleteAllFrameView(self):
         self.frameLeft.connectDb.deleteAllStock()
         self.frameLeft.refreshStock()
 
     def modifyStockFrameView(self):
         try:
-            self.newWin = modifyStockWin(self.frameLeft.curItem, self)
+            self.newWin = modifyStockWin(self, self.frameLeft.curItem, )
             self.newWin.grab_set()
         except AttributeError:
+            self.master.Show(error="Pas d'item selectionné")
+
+    def modifyItemFrameView(self):
+        try:
+            self.newWin = modifyItemWin(self, self.frameLeft.curItem )
+            self.newWin.grab_set()
+        except AttributeError:
+            traceback.print_exc()
             self.master.Show(error="Pas d'item selectionné")
 
 # =============+ View Table of Stock +==============
