@@ -5,13 +5,19 @@ import tkinter.messagebox
 from typing import Tuple
 from tkinter import ttk, END
 import customtkinter
+from Spinbox import *
 import pymongo
 import db as db
+<<<<<<< HEAD
 from spinbox import *
+=======
+from PIL import Image
+import traceback
+>>>>>>> 818bd1d507914d18d52bc58493f7c409ee56c497
 
 # =============+ Style for all +==============
 
-customtkinter.set_appearance_mode("System")
+customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("blue")
 class popupWin(customtkinter.CTkToplevel):
     def __init__(self, parent, title, geometry="550x250") -> None:
@@ -28,6 +34,7 @@ class popupWin(customtkinter.CTkToplevel):
         self._window_exists = False
         self.destroy()
 
+<<<<<<< HEAD
 class modifyStockNbrWin(popupWin):
     def __init__(self, parent, item, **kwargs):
         super().__init__(parent, "Modifier le nombre du stock", geometry="300x180", **kwargs)
@@ -50,10 +57,43 @@ class modifyStockNbrWin(popupWin):
 
 
 
+=======
+class modifyStockWin(popupWin):
+    def __init__(self, curItem, parent, title="Modifier un nombre de stock", geometry="550x250") -> None:
+        super().__init__(parent, title, geometry)
+        self.parent = parent
+        self.curItem = curItem
+        self.parent.master.unShow()
+        self.parent = parent
+        self.labelLastStockNameT = customtkinter.CTkLabel(self, text="Nom de l'élément", anchor="center", justify="left")
+        self.labelLastStockNameT.grid(row=0, column=0, sticky="nsew")
+        self.labelLastStockName = customtkinter.CTkLabel(self, text=curItem['values'][1], anchor="center", text_color="green", justify="left", corner_radius=8)
+        self.labelLastStockName.grid(row=1, column=0, sticky="nsew")
+        self.labelLastStockNbrT = customtkinter.CTkLabel(self, text="Nombre de stock de l'élément", anchor="center", justify="left")
+        self.labelLastStockNbrT.grid(row=2, column=0, sticky="nsew")
+        self.labelLastStockNbr = customtkinter.CTkLabel(self, text=curItem['values'][3], anchor="center", text_color="green", justify="left", corner_radius=8)
+        self.labelLastStockNbr.grid(row=3, column=0, sticky="nsew")
+        self.labelReqNbrT = customtkinter.CTkLabel(self, text="Nouveau nombre de stock de l'élément", anchor="center", justify="left")
+        self.labelReqNbrT.grid(row=4, column=0, sticky="nsew")
+        self.inputNbr = Spinbox(self, start_value=curItem['values'][3], min_value=0, max_value=99999999)
+        self.inputNbr.grid(row=5, column=0, sticky="nsew", padx=50)
+        self.btnAddElem = customtkinter.CTkButton(self, text="Valider", fg_color="#373737", hover_color="#414141", command=self.addNewStock)
+        self.btnAddElem.grid(row=6, column=0 ,sticky="nsew", padx=50, pady=15)
+        self.grid_columnconfigure(0, weight=1)
+
+
+    def addNewStock(self):
+        self.principal = self.parent.master.frameLeft
+        self.principal.connectDb.modifyNbrStock(self.curItem['values'][1], int(self.inputNbr.get()))
+        self.principal.refreshStock()
+        self.destroy()
+
+        
+>>>>>>> 818bd1d507914d18d52bc58493f7c409ee56c497
 
 class insertStockWin(popupWin):
-    def __init__(self, parent, **kwargs):
-        super().__init__(parent, "Inserer un élement", geometry='500x350', **kwargs)
+    def __init__(self, parent, title="Inserer un élement", **kwargs):
+        super().__init__(parent, title, geometry='500x390', **kwargs)
         self.infos = {}
         self.parent = parent
 
@@ -61,19 +101,21 @@ class insertStockWin(popupWin):
         self.strName = customtkinter.StringVar()
         self.labelName = customtkinter.CTkLabel(self, text="Nom de l'élement", anchor="w", justify="left")
         self.labelName.grid(row=0, column=0, sticky="w", padx=30, pady=(20, 0), ipadx=10)
-        self.inputName = customtkinter.CTkEntry(self, placeholder_text="Nom")
+        self.inputName = customtkinter.CTkEntry(self, textvariable=self.strName)
         self.inputName.grid(row=1, column=0, sticky="w", padx=28, ipadx=10)
 
         #Type de l'élement widget
+        self.strType = customtkinter.StringVar(value="Nourriture")
         self.labelType = customtkinter.CTkLabel(self, text="Type de l'élement", anchor="w", justify="left")
         self.labelType.grid(row=0, column=1, sticky="w", padx=(30, 0), pady=(20, 0), ipadx=10)
-        self.inputType = customtkinter.CTkComboBox(self, values=["Nourriture", "Boisson"])
+        self.inputType = customtkinter.CTkComboBox(self, values=["Nourriture", "Boisson"], variable=self.strType)
         self.inputType.grid(row=1, column=1, sticky="w", padx=28, ipadx=10)
 
         #Stock déja présent de l'élement widget
+        self.strStock = customtkinter.StringVar()
         self.labelStock = customtkinter.CTkLabel(self, text="Stock de l'élement", anchor="w", justify="left")
         self.labelStock.grid(row=3, column=0, sticky="w", padx=30, pady=(20, 0), ipadx=10)
-        self.inputStock = customtkinter.CTkEntry(self, placeholder_text="number")
+        self.inputStock = customtkinter.CTkEntry(self, textvariable=self.strStock)
         self.inputStock.grid(row=4, column=0, sticky="w", padx=28, ipadx=10)
         
         #Information de l'élement
@@ -133,9 +175,26 @@ class insertStockWin(popupWin):
             self.principal.refreshStock()
             self.destroy()
         else:
-            print("Il manque des infos")
+            self.Show(error="Il manque des infos")
+
+    def Show(self, error):
+        self.errorLine = errorPopup(master=self, corner_radius=4, height=20, error=error)
+        self.errorLine.grid(row=7, column=0, columnspan=4, sticky='ew')
 
 
+class modifyItemWin(insertStockWin):
+    def __init__(self, parent, curItem, **kwargs):
+        super().__init__(parent, title="Modifier un élement", **kwargs)
+        self.curItem = curItem
+        self.strName.set(curItem["values"][1])
+        self.strType.set(curItem["values"][2])
+        self.strStock.set(curItem["values"][3])
+        self.addAllInfo()
+    
+    def addAllInfo(self):
+        for doc in self.curItem["values"]:
+            print(type(doc))
+            print(doc)
 
 
 class buttonStock(customtkinter.CTkButton):
@@ -152,7 +211,11 @@ class BtnFrame(customtkinter.CTkFrame):
         self.button1 = buttonStock(self, text="Ajouter un\nélement", command=self.insertFrameView)
         self.button1.grid(row=0, column=0, padx=10, pady=10)
 
+<<<<<<< HEAD
         self.button2 = buttonStock(self, text="Modifier du\nstock à un\nélement", command=self.modifyStockView)
+=======
+        self.button2 = buttonStock(self, text="Modifier du\nstock à un\nélement", command=self.modifyStockFrameView)
+>>>>>>> 818bd1d507914d18d52bc58493f7c409ee56c497
         self.button2.grid(row=1, column=0, padx=10, pady=10)
 
         # Delete element (Already fix)
@@ -164,7 +227,7 @@ class BtnFrame(customtkinter.CTkFrame):
         self.button4.grid(row=3, column=0, padx=10, pady=10)
         
 
-        self.button6 = buttonStock(self, text="Modifier un\nélement", command=self.insertFrameView)
+        self.button6 = buttonStock(self, text="Modifier un\nélement", command=self.modifyItemFrameView)
         self.button6.grid(row=0, column=1, padx=10, pady=10)
         
 
@@ -173,19 +236,40 @@ class BtnFrame(customtkinter.CTkFrame):
         self.newWin.grab_set()
         
     def deleteFrameView(self):
-        self.frameLeft.connectDb.deleteStock(self.frameLeft.curItemID)
-        self.frameLeft.refreshStock()
-
+        try:
+            self.frameLeft.connectDb.deleteStock(self.frameLeft.curItemID)
+            self.frameLeft.refreshStock()
+        except AttributeError:
+            self.master.Show(error="Pas d'item selectionné")
+        else:
+            self.master.unShow()
     def deleteAllFrameView(self):
         self.frameLeft.connectDb.deleteAllStock()
         self.frameLeft.refreshStock()
 
+<<<<<<< HEAD
     def modifyStockView(self):
         if self.frameLeft.curItem:
             self.newWin = modifyStockNbrWin(self, self.frameLeft.curItem)
             self.newWin.grab_set()
         else:
             print("Selectionner un element plsw")
+=======
+    def modifyStockFrameView(self):
+        try:
+            self.newWin = modifyStockWin(self, self.frameLeft.curItem, )
+            self.newWin.grab_set()
+        except AttributeError:
+            self.master.Show(error="Pas d'item selectionné")
+
+    def modifyItemFrameView(self):
+        try:
+            self.newWin = modifyItemWin(self, self.frameLeft.curItem )
+            self.newWin.grab_set()
+        except AttributeError:
+            traceback.print_exc()
+            self.master.Show(error="Pas d'item selectionné")
+>>>>>>> 818bd1d507914d18d52bc58493f7c409ee56c497
 
 # =============+ View Table of Stock +==============
 class StockViewFrame(customtkinter.CTkFrame):
@@ -246,7 +330,19 @@ class StockViewFrame(customtkinter.CTkFrame):
     def selectedItem(self, a):
         self.curItemID = self.table.focus()
         self.curItem = self.table.item(self.curItemID)
-        
+
+
+class errorPopup(customtkinter.CTkFrame):
+    def __init__(self, master, error, **kwargs):
+        super().__init__(master, bg_color='red', fg_color='red', **kwargs)
+        self.errorImg = customtkinter.CTkImage(Image.open("application/src/error.png"), size=(15, 15))
+        self.errorLblImg = customtkinter.CTkLabel(self, image=self.errorImg, text="")
+        self.errorLblImg.grid(row=0, column=0, padx=(10, 0))
+
+        self.errorLbl = customtkinter.CTkLabel(self, text=error, justify="left")
+        self.errorLbl.grid(row=0, column=1, padx=(10, 0))
+    
+    
         
 class StockApp(customtkinter.CTk):
     
@@ -267,8 +363,19 @@ class StockApp(customtkinter.CTk):
         self.frameLeft.grid(row=0, column=0, padx=20, pady=20, sticky='nsew')
         self.frameRight = BtnFrame(master=self, corner_radius=15, height=540, width=260)
         self.frameRight.grid(row=0, column=1, padx=20, pady=20, sticky='nsew')
-
         self.mainloop()
+
+    
+    def unShow(self):
+        try:
+            self.errorLine.grid_forget()
+        except:
+            print("a")
+
+    def Show(self, error):
+        self.errorLine = errorPopup(master=self, corner_radius=4, height=20, width=930, error=error)
+        self.errorLine.grid(row=1, column=0, columnspan=2, sticky='ew')
+        
     
         
 
