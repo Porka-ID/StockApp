@@ -107,7 +107,7 @@ class insertStockWin(popupWin):
         #Listing des infos ajoutées
         columns = ('key', 'info')
         self.table = ttk.Treeview(master=self, columns=columns, height=5, selectmode='browse', show='headings')
-        self.table.column("#1", anchor='c', width=25, minwidth=25)
+        self.table.column("#1", anchor='c', width=45, minwidth=35)
         self.table.column('#2', anchor='w', minwidth=25)
         # =============+ Table head +==============
         self.table.heading('key', text='Clé')
@@ -117,23 +117,16 @@ class insertStockWin(popupWin):
         self.btnAddElem = customtkinter.CTkButton(self, text="Valider", fg_color="#373737", hover_color="#414141", command=self.addToStock)
         self.btnAddElem.grid(row=6, column=0 ,sticky="nsew", padx=20, pady=20)
         
-    def addInfo(self, key, info, type):
+    def addInfo(self, key, info):
         if not key or not info:
             print("Erreur")
             return
         try: 
             if self.infos[key]:
-                match type:
-                    case "a":
-                        print("same")
-                    case "m":
-                        print("salut")
-                        self.infos[key] = info
-                        print(self.table.item(self.table.selection()))
-                
+                print("same")
+                raise 
+
         except:
-            if type == "m":
-                self.Show(error="Modification d'un élement non-existant (Ajout de ce dernier)")
             self.infos[key] = info
             self.table.insert(parent='', index='end', text='', values=(key, info))
             self.inputInfoGet.delete(0, END)
@@ -162,10 +155,16 @@ class insertStockWin(popupWin):
         self.errorLine = errorPopup(master=self, corner_radius=4, height=20, error=error)
         self.errorLine.grid(row=7, column=0, columnspan=4, sticky='ew')
 
+    def unShow(self):
+        try:
+            self.errorLine.grid_forget()
+        except:
+            print("a")
 
 class modifyItemWin(insertStockWin):
     def __init__(self, parent, curItem, **kwargs):
         super().__init__(parent, title="Modifier un élement", **kwargs)
+        self.parent = parent
         self.curItem = curItem
         self.strName.set(curItem["values"][1])
         self.strType.set(curItem["values"][2])
@@ -173,14 +172,46 @@ class modifyItemWin(insertStockWin):
         self.addAllInfo()
 
         #Modifier une info
-        self.btnMod = customtkinter.CTkButton(self, width=50, height=20, text='Modifier', fg_color="#373737", hover_color='#414141', command=lambda: self.addInfo(self.inputInfoKey.get(), self.inputInfoGet.get(), "m")) #command=lambda: self.addInfo(self.strInfoKey.get(), self.strInfoGet.get()) )
+        self.btnMod = customtkinter.CTkButton(self, width=50, height=20, text='Modifier', fg_color="#373737", hover_color='#414141', command=lambda: self.modifyInfo(self.inputInfoKey.get(), self.inputInfoGet.get())) #command=lambda: self.addInfo(self.strInfoKey.get(), self.strInfoGet.get()) )
         self.btnMod.grid(row=4, column=1, sticky='e', padx=(0, 10), pady=(5, 0))
     
     def addAllInfo(self):
         i = 0
         doc = ast.literal_eval(self.curItem["values"][4])
         for k, v in doc.items():
-            self.addInfo(k, v, "a")
+            self.addInfo(k, v)
+
+    def modifyInfo(self, key, info):
+        if self.table.selection() != ():
+            del self.infos[self.table.item(self.table.selection())["values"][0]]
+            self.table.item(self.table.selection(), values=[key, info])
+            self.infos[key] = info
+            self.inputInfoGet.delete(0, END)
+            self.inputInfoKey.delete(0, END)
+            self.unShow()
+        else:
+            self.Show(error="Pas d'item selectionné, veuillez en selectionner un")
+
+    def addToStock(self):
+        name = self.inputName.get()
+        type = self.inputType.get()
+        try:
+            nbrStock = int(self.inputStock.get())
+        except:
+            nbrStock = False
+            
+        self.infos = self.infos
+        
+        if len(name) > 1 and nbrStock:
+            print(name, type, nbrStock, self.infos)
+            self.principal = self.parent.master.frameLeft
+            self.principal.connectDb.modifyStock(name, type, nbrStock, self.infos, self.curItem["values"][1])
+            self.principal.refreshStock()
+            self.parent.frameLeft.curItem = None
+            self.destroy()
+        else:
+            self.Show(error="Il manque des infos")
+
             
 
 
@@ -220,28 +251,44 @@ class BtnFrame(customtkinter.CTkFrame):
         
     def deleteFrameView(self):
         try:
-            self.frameLeft.connectDb.deleteStock(self.frameLeft.curItemID)
-            self.frameLeft.refreshStock()
+            if self.frameLeft.curItem["values"] != '' and self.frameLeft.table.selection() != ():
+                print(self.frameLeft.table.selection())
+                print("hello")
+                self.frameLeft.connectDb.deleteStock(self.frameLeft.curItemID)
+                self.frameLeft.refreshStock()
+                self.master.unShow()
+            else:
+                self.master.Show(error="Pas d'item selectionné")
         except AttributeError:
+            traceback.print_exc()
             self.master.Show(error="Pas d'item selectionné")
-        else:
-            self.master.unShow()
+    
+            
     def deleteAllFrameView(self):
         self.frameLeft.connectDb.deleteAllStock()
         self.frameLeft.refreshStock()
 
     def modifyStockFrameView(self):
         try:
-            self.newWin = modifyStockWin(self.frameLeft.curItem, self )
-            self.newWin.grab_set()
+            if self.frameLeft.curItem["values"] != '' and self.frameLeft.table.selection() != ():
+                self.newWin = modifyStockWin(self.frameLeft.curItem, self )
+                self.newWin.grab_set()
+                self.master.unShow()
+            else:
+                self.master.Show(error="Pas d'item selectionné")
         except AttributeError:
             traceback.print_exc()
             self.master.Show(error="Pas d'item selectionné")
 
     def modifyItemFrameView(self):
         try:
-            self.newWin = modifyItemWin(self, self.frameLeft.curItem )
-            self.newWin.grab_set()
+            if self.frameLeft.curItem["values"] != '' and self.frameLeft.table.selection() != ():
+                print(self.frameLeft.curItem)
+                self.newWin = modifyItemWin(self, self.frameLeft.curItem )
+                self.newWin.grab_set()
+                self.master.unShow()
+            else:
+                self.master.Show(error="Pas d'item selectionné")
         except AttributeError:
             traceback.print_exc()
             self.master.Show(error="Pas d'item selectionné")
@@ -348,8 +395,12 @@ class StockApp(customtkinter.CTk):
             print("a")
 
     def Show(self, error):
-        self.errorLine = errorPopup(master=self, corner_radius=4, height=20, width=930, error=error)
-        self.errorLine.grid(row=1, column=0, columnspan=2, sticky='ew')
+        try:
+            if self.errorLine:
+                self.unShow()
+        finally:
+            self.errorLine = errorPopup(master=self, corner_radius=4, height=20, width=930, error=error)
+            self.errorLine.grid(row=1, column=0, columnspan=2, sticky='ew')
         
     
         

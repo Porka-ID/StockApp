@@ -11,7 +11,6 @@ class Database:
         return self.col.find() or False
     
     def insertStock(self, name, type, nbrStock, infos):
-        print(infos)
         self.col.insert_one({"name": name, "type": type, "qty": nbrStock, "infos": infos})
         return name, type, nbrStock, infos
     
@@ -26,3 +25,8 @@ class Database:
     def modifyNbrStock(self, name, nbr):
         self.col.update_one({"name": name}, {"$set": {"qty": nbr}})
         return {"qty": nbr}
+    
+    def modifyStock(self, name, type, nbrStock, infos, oldName):
+        print(oldName)
+        self.col.update_one({"name": oldName}, {"$set": {"name": name, "type": type, "qty": nbrStock, "infos": infos}})
+        return [name, type, nbrStock, infos]
