@@ -10,6 +10,9 @@ class Database:
     def getAll(self):
         return self.col.find() or False
     
+    def getByName(self, name):
+        return self.col.find({'name': {'$regex': name, "$options": "i"}})
+    
     def insertStock(self, name, type, nbrStock, infos):
         self.col.insert_one({"name": name, "type": type, "qty": nbrStock, "infos": infos})
         return name, type, nbrStock, infos

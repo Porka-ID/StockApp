@@ -332,23 +332,47 @@ class StockViewFrame(customtkinter.CTkFrame):
         self.table.heading('type', text='Type')
         self.table.heading('qty', text="Quantité")
         self.table.heading('infos', text="Informations")
-        self.table.grid(row=0, column=0, sticky='nsew', padx=10, pady=10)
+        self.table.grid(row=0, column=0, columnspan=2, sticky='nsew', padx=10, pady=10)
         self.refreshStock()
+        self.searchStr = customtkinter.StringVar()
+        self.searchBar = customtkinter.CTkEntry(self, placeholder_text="Nom de l'élement à chercher", textvariable=self.searchStr)
+        self.searchBar.bind("<Return>", self.searchItem)
+        self.searchBar.grid(row=1, column=0, sticky='nsew')
+        self.searchBtn = customtkinter.CTkButton(self, text="Search", fg_color='#737272', hover_color='#414141', font=("Inter", 12), command=self.searchItem)
+        self.searchBtn.grid(row=1, column=1, sticky='e')
         self.table.bind('<ButtonRelease-1>', self.selectedItem)
-
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-    def refreshStock(self):
+    def deleteItemsTable(self):
         for i in self.table.get_children():
             self.table.delete(i)
-        self.values = self.connectDb.getAll()
+
+    def insertToTble(self):
         i = 0
         for doc in self.values:
             print(doc)
             i += 1
             self.table.insert(parent='', index='end', iid=doc["_id"], text='', values=(i, doc["name"], doc["type"], doc["qty"], doc["infos"]))
+
+    def refreshStock(self):
+        self.deleteItemsTable()
+        self.values = self.connectDb.getAll()
+        self.insertToTble()
     
+    def searchItem(self, event):
+        self.values = self.connectDb.getByName(self.searchStr.get())
+        try:
+            if self.values[0]:
+                self.deleteItemsTable()
+                self.insertToTble()
+
+
+                
+        except IndexError:
+            print("No")
+        
+
     def selectedItem(self, a):
         self.curItemID = self.table.focus()
         self.curItem = self.table.item(self.curItemID)
@@ -402,9 +426,6 @@ class StockApp(customtkinter.CTk):
             self.errorLine = errorPopup(master=self, corner_radius=4, height=20, width=930, error=error)
             self.errorLine.grid(row=1, column=0, columnspan=2, sticky='ew')
         
-    
         
-
-
 if __name__ == "__main__":
     app = StockApp()
