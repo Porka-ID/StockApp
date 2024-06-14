@@ -360,7 +360,7 @@ class StockViewFrame(customtkinter.CTkFrame):
         self.values = self.connectDb.getAll()
         self.insertToTble()
     
-    def searchItem(self, event):
+    def searchItem(self, event=None):
         self.values = self.connectDb.getByName(self.searchStr.get())
         try:
             if self.values[0]:
