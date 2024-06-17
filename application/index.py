@@ -297,6 +297,7 @@ class BtnFrame(customtkinter.CTkFrame):
 class StockViewFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
+        self.master = master
         self.connectDb = db.Database()
         # =============+ Style for Treeview +==============
         style = ttk.Style()
@@ -366,11 +367,9 @@ class StockViewFrame(customtkinter.CTkFrame):
             if self.values[0]:
                 self.deleteItemsTable()
                 self.insertToTble()
-
-
-                
+            self.master.unShow()             
         except IndexError:
-            print("No")
+            self.master.Show(error="Aucun item ayant ce nom")
         
 
     def selectedItem(self, a):
